@@ -6,6 +6,11 @@
 #include "compositor.hpp"
 #include "shm.hpp"
 #include "output.hpp"
+#include "shell.hpp"
+#include "shm-pool.hpp"
+#include "buffer.hpp"
+#include "shell-surface.hpp"
+#include "surface.hpp"
 
 #include <string.h>
 #include <sys/epoll.h>
@@ -112,6 +117,25 @@ os_create_anonymous_file(off_t size) {
 
 struct Application {
 
+  Display display;
+  Registry registry;
+  Shm shm;
+  ShmPool pool;
+  Compositor compositor;
+  Output output;
+  Shell shell;
+  ShellSurface shell_surface;
+  Surface surface;
+  Buffer buffer;
+
+  int epoll_fd;
+  int display_fd;
+
+  static const wl_registry_listener kRegistryListener;
+  static const wl_shm_listener kShmListener;
+  static const wl_shell_surface_listener kShellSurfaceListener;
+  static const wl_surface_listener kSurfaceListener;
+
   Application()
       : epoll_fd(0), display_fd(0) {}
 
@@ -128,6 +152,17 @@ struct Application {
 
     display.DispatchPending();
     display.Roundtrip();
+
+    surface.Setup(compositor);
+    wl_surface_add_listener(surface.native, &kSurfaceListener, this);
+
+    shell_surface.Setup(shell, surface);
+    wl_shell_surface_add_listener(shell_surface.native, &kShellSurfaceListener, this);
+
+    // TODO: Create Window
+    // TODO: Paint pixels
+    CreateWindow();
+    PaintPixels();
   }
 
   void Run() {
@@ -154,8 +189,13 @@ struct Application {
     close(epoll_fd);
     epoll_fd = 0;
 
+    buffer.Destroy();
+    surface.Destroy();
+    shell_surface.Destroy();
+    shell.Destroy();
     output.Destroy();
     compositor.Destroy();
+    pool.Destroy();
     shm.Destroy();
     registry.Destroy();
     display.Disconnect();
@@ -222,6 +262,46 @@ struct Application {
     }
   }
 
+  void CreateWindow() {
+    CreateBuffer();
+
+    surface.Attach(buffer, 0, 0);
+    surface.Commit();
+  }
+
+  void CreateBuffer() {
+    int stride = WIDTH * 4; // 4 bytes per pixel
+    int size = stride * HEIGHT;
+    int fd;
+
+    fd = os_create_anonymous_file(size);
+    if (fd < 0) {
+      fprintf(stderr, "creating a buffer file for %d B failed: %m\n",
+              size);
+      exit(1);
+    }
+
+    shm_data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (shm_data == MAP_FAILED) {
+      fprintf(stderr, "mmap failed: %m\n");
+      close(fd);
+      exit(1);
+    }
+
+    pool.Setup(shm, fd, size);
+    buffer.Setup(pool, 0, WIDTH, HEIGHT, stride, WL_SHM_FORMAT_ARGB8888);
+  }
+
+  void PaintPixels() {
+    int n;
+    uint32_t *pixel = (uint32_t *) shm_data;
+
+    fprintf(stdout, "Painting pixels\n");
+    for (n = 0; n < WIDTH * HEIGHT; n++) {
+      *pixel++ = 0xffff;
+    }
+  }
+
   static void WatchEpollFd(int epoll_fd, int fd, uint32_t events, void *data) {
     struct epoll_event ep;
     ep.events = events;
@@ -243,6 +323,8 @@ struct Application {
     } else if (strcmp(interface, wl_shm_interface.name) == 0) {
       _this->shm.Setup(_this->registry, name, version);
       wl_shm_add_listener(_this->shm.native, &kShmListener, _this);
+    } else if (strcmp(interface, wl_shell_interface.name) == 0) {
+      _this->shell.Setup(_this->registry, name, version);
     } else if (strcmp(interface, wl_output_interface.name) == 0) {
       _this->output.Setup(_this->registry, name, version);
     }
@@ -256,17 +338,30 @@ struct Application {
     fprintf(stdout, "format: %d\n", format);
   }
 
-  Display display;
-  Registry registry;
-  Shm shm;
-  Compositor compositor;
-  Output output;
+  static void OnShellSurfaceConfigure(void *data,
+                                      struct wl_shell_surface *shell_surface,
+                                      uint32_t edges,
+                                      int32_t width,
+                                      int32_t height) {
 
-  int epoll_fd;
-  int display_fd;
+  }
 
-  static const wl_registry_listener kRegistryListener;
-  static const wl_shm_listener kShmListener;
+  static void OnShellSurfacePing(void *data, struct wl_shell_surface *shell_surface, uint32_t serial) {
+    Application *_this = static_cast<Application *>(data);
+    _this->shell_surface.Pong(serial);
+  }
+
+  static void OnShellSurfacePopupDone(void *data, struct wl_shell_surface *shell_surface) {
+
+  }
+
+  static void OnSurfaceEnter(void *data, struct wl_surface *surface, wl_output *output) {
+    fprintf(stdout, "%s\n", __PRETTY_FUNCTION__);
+  }
+
+  static void OnSurfaceLeave(void *data, struct wl_surface *surface, wl_output *output) {
+    fprintf(stdout, "%s\n", __PRETTY_FUNCTION__);
+  }
 
 };
 
@@ -277,6 +372,17 @@ const wl_registry_listener Application::kRegistryListener = {
 
 const wl_shm_listener Application::kShmListener = {
     OnShmFormat
+};
+
+const wl_shell_surface_listener Application::kShellSurfaceListener = {
+    OnShellSurfacePing,
+    OnShellSurfaceConfigure,
+    OnShellSurfacePopupDone
+};
+
+const wl_surface_listener Application::kSurfaceListener = {
+    OnSurfaceEnter,
+    OnSurfaceLeave
 };
 
 int main() {
