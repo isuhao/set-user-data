@@ -119,25 +119,23 @@ struct Application {
 
   Display display;
   Registry registry;
-  Shm shm;
-  ShmPool pool;
   Compositor compositor;
   Output output;
+  Shm shm;
   Shell shell;
-  ShellSurface shell_surface;
   Surface surface;
+  ShellSurface shell_surface;
+  ShmPool pool;
   Buffer buffer;
 
   int epoll_fd;
   int display_fd;
 
-  static const wl_registry_listener kRegistryListener;
   static const wl_shm_listener kShmListener;
-  static const wl_shell_surface_listener kShellSurfaceListener;
-  static const wl_surface_listener kSurfaceListener;
 
   Application()
-      : epoll_fd(0), display_fd(0) {}
+      : epoll_fd(0),
+        display_fd(0) {}
 
   ~Application() {}
 
@@ -147,20 +145,18 @@ struct Application {
     epoll_fd = CreateEpollFd();
     WatchEpollFd(epoll_fd, display_fd, EPOLLIN | EPOLLERR | EPOLLHUP, this);
 
+    registry.global = Delegate<void(uint32_t, const char *, uint32_t)>::FromMethod(this, &Application::OnGlobal);
+    registry.global_remove = Delegate<void(uint32_t)>::FromMethod(this, &Application::OnGlobalRemove);
     registry.Setup(display);
-    wl_registry_add_listener(registry.native, &kRegistryListener, this);
 
     display.DispatchPending();
     display.Roundtrip();
 
     surface.Setup(compositor);
-    wl_surface_add_listener(surface.native, &kSurfaceListener, this);
 
     shell_surface.Setup(shell, surface);
-    wl_shell_surface_add_listener(shell_surface.native, &kShellSurfaceListener, this);
+    shell_surface.SetToplevel();
 
-    // TODO: Create Window
-    // TODO: Paint pixels
     CreateWindow();
     PaintPixels();
   }
@@ -313,24 +309,22 @@ struct Application {
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
   }
 
-  static void OnGlobal(void *data, struct wl_registry *registry,
-                       uint32_t name, const char *interface, uint32_t version) {
+  void OnGlobal(uint32_t name, const char *interface, uint32_t version) {
     fprintf(stdout, "name: %d, interface: %s, version: %d\n", name, interface, version);
-    Application *_this = static_cast<Application *>(data);
 
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-      _this->compositor.Setup(_this->registry, name, version);
+      this->compositor.Setup(this->registry, name, version);
     } else if (strcmp(interface, wl_shm_interface.name) == 0) {
-      _this->shm.Setup(_this->registry, name, version);
-      wl_shm_add_listener(_this->shm.native, &kShmListener, _this);
+      this->shm.Setup(this->registry, name, version);
+      wl_shm_add_listener(this->shm.native, &kShmListener, this);
     } else if (strcmp(interface, wl_shell_interface.name) == 0) {
-      _this->shell.Setup(_this->registry, name, version);
+      this->shell.Setup(this->registry, name, version);
     } else if (strcmp(interface, wl_output_interface.name) == 0) {
-      _this->output.Setup(_this->registry, name, version);
+      this->output.Setup(this->registry, name, version);
     }
   }
 
-  static void OnGlobalRemove(void *data, struct wl_registry *registry, uint32_t name) {
+  void OnGlobalRemove(uint32_t name) {
     fprintf(stdout, "name: %d\n", name);
   }
 
@@ -338,51 +332,10 @@ struct Application {
     fprintf(stdout, "format: %d\n", format);
   }
 
-  static void OnShellSurfaceConfigure(void *data,
-                                      struct wl_shell_surface *shell_surface,
-                                      uint32_t edges,
-                                      int32_t width,
-                                      int32_t height) {
-
-  }
-
-  static void OnShellSurfacePing(void *data, struct wl_shell_surface *shell_surface, uint32_t serial) {
-    Application *_this = static_cast<Application *>(data);
-    _this->shell_surface.Pong(serial);
-  }
-
-  static void OnShellSurfacePopupDone(void *data, struct wl_shell_surface *shell_surface) {
-
-  }
-
-  static void OnSurfaceEnter(void *data, struct wl_surface *surface, wl_output *output) {
-    fprintf(stdout, "%s\n", __PRETTY_FUNCTION__);
-  }
-
-  static void OnSurfaceLeave(void *data, struct wl_surface *surface, wl_output *output) {
-    fprintf(stdout, "%s\n", __PRETTY_FUNCTION__);
-  }
-
-};
-
-const wl_registry_listener Application::kRegistryListener = {
-    OnGlobal,
-    OnGlobalRemove
 };
 
 const wl_shm_listener Application::kShmListener = {
     OnShmFormat
-};
-
-const wl_shell_surface_listener Application::kShellSurfaceListener = {
-    OnShellSurfacePing,
-    OnShellSurfaceConfigure,
-    OnShellSurfacePopupDone
-};
-
-const wl_surface_listener Application::kSurfaceListener = {
-    OnSurfaceEnter,
-    OnSurfaceLeave
 };
 
 int main() {

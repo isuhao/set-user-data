@@ -7,6 +7,7 @@
 
 #include "compositor.hpp"
 #include "buffer.hpp"
+#include "delegate.hpp"
 
 struct Surface {
 
@@ -20,6 +21,7 @@ struct Surface {
   void Setup(const Compositor &compositor) {
     Destroy();
     native = wl_compositor_create_surface(compositor.native);
+    wl_surface_add_listener(native, &kListener, this);
   }
 
   void Destroy() {
@@ -38,6 +40,15 @@ struct Surface {
   }
 
   struct wl_surface *native;
+
+  Delegate<void(struct wl_output *)> enter;
+  Delegate<void(struct wl_output *)> leave;
+
+  static void OnEnter(void *data, struct wl_surface *surface, struct wl_output *output);
+
+  static void OnLeave(void *data, struct wl_surface *surface, struct wl_output *output);
+
+  static const wl_surface_listener kListener;
 
 };
 
