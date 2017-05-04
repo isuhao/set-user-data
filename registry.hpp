@@ -32,8 +32,18 @@ struct Registry {
 
   struct wl_registry *native;
 
-  Delegate<void(uint32_t, const char *, uint32_t)> global;
-  Delegate<void(uint32_t)> global_remove;
+  DelegateRef<void(uint32_t, const char *, uint32_t)> global() {
+    return global_;
+  }
+
+  DelegateRef<void(uint32_t)> global_remove() {
+    return global_remove_;
+  }
+
+ private:
+
+  Delegate<void(uint32_t, const char *, uint32_t)> global_;
+  Delegate<void(uint32_t)> global_remove_;
 
   static void OnGlobal(void *data,
                        struct wl_registry *registry,

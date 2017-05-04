@@ -12,6 +12,6 @@ const struct wl_shm_listener Shm::kListener = {
 
 void Shm::OnFormat(void *data, struct wl_shm *shm, uint32_t format) {
   Shm *_this = static_cast<Shm *>(data);
-  if (_this->format)
-    _this->format(format);
+  if (_this->format_)
+    _this->format_(format);
 }

@@ -31,12 +31,35 @@ struct Output {
     }
   }
 
+  void SetUserData(void *user_data) {
+    wl_output_set_user_data(native, user_data);
+  }
+
   struct wl_output *native;
 
-  Delegate<void(int32_t, int32_t, int32_t, int32_t, int32_t, const char *, const char *, int32_t)> geometry;
-  Delegate<void(uint32_t, int32_t, int32_t, int32_t)> mode;
-  Delegate<void()> done;
-  Delegate<void(int32_t)> scale;
+  DelegateRef<void(int32_t, int32_t, int32_t, int32_t, int32_t,
+                   const char *, const char *, int32_t)> geometry() {
+    return geometry_;
+  };
+
+  DelegateRef<void(uint32_t, int32_t, int32_t, int32_t)> mode() {
+    return mode_;
+  };
+
+  DelegateRef<void()> done() {
+    return done_;
+  }
+
+  DelegateRef<void(int32_t)> scale() {
+    return scale_;
+  }
+
+ private:
+
+  Delegate<void(int32_t, int32_t, int32_t, int32_t, int32_t, const char *, const char *, int32_t)> geometry_;
+  Delegate<void(uint32_t, int32_t, int32_t, int32_t)> mode_;
+  Delegate<void()> done_;
+  Delegate<void(int32_t)> scale_;
 
   static void OnGeometry(void *data,
                          struct wl_output *wl_output,

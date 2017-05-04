@@ -15,14 +15,14 @@ void Registry::OnGlobal(void *data,
                         const char *interface,
                         uint32_t version) {
   Registry *_this = static_cast<Registry *>(data);
-  if (_this->global)
-    _this->global(id, interface, version);
+  if (_this->global_)
+    _this->global_(id, interface, version);
 }
 
 void Registry::OnGlobalRemove(void *data,
                               struct wl_registry *registry,
                               uint32_t name) {
   Registry *_this = static_cast<Registry *>(data);
-  if (_this->global_remove)
-    _this->global_remove(name);
+  if (_this->global_remove_)
+    _this->global_remove_(name);
 }

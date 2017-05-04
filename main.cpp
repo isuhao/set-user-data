@@ -143,8 +143,8 @@ struct Application {
     epoll_fd = CreateEpollFd();
     WatchEpollFd(epoll_fd, display_fd, EPOLLIN | EPOLLERR | EPOLLHUP, this);
 
-    registry.global = Delegate<void(uint32_t, const char *, uint32_t)>::FromMethod(this, &Application::OnGlobal);
-    registry.global_remove = Delegate<void(uint32_t)>::FromMethod(this, &Application::OnGlobalRemove);
+    registry.global().Set(this, &Application::OnGlobal);
+    registry.global_remove().Set(this, &Application::OnGlobalRemove);
     registry.Setup(display);
 
     display.DispatchPending();
@@ -152,7 +152,9 @@ struct Application {
 
     surface.Setup(compositor);
 
-    shell_surface.ping = Delegate<void(uint32_t)>::FromMethod(this, &Application::OnShellSurfacePing);
+    shell_surface.configure().Set(this, &Application::OnShellSurfaceConfigure);
+    shell_surface.ping().Set(this, &Application::OnShellSurfacePing);
+    shell_surface.popup_done().Set(this, &Application::OnShellSurfacePopupDone);
     shell_surface.Setup(shell, surface);
     shell_surface.SetToplevel();
 
@@ -302,20 +304,61 @@ struct Application {
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
       this->compositor.Setup(this->registry, name, version);
     } else if (strcmp(interface, wl_shm_interface.name) == 0) {
+      this->shm.format().Set(this, &Application::OnShmFormat);
       this->shm.Setup(this->registry, name, version);
     } else if (strcmp(interface, wl_shell_interface.name) == 0) {
       this->shell.Setup(this->registry, name, version);
     } else if (strcmp(interface, wl_output_interface.name) == 0) {
+      this->output.geometry().Set(this, &Application::OnOutputGeometry);
+      this->output.mode().Set(this, &Application::OnOutputMode);
+      this->output.done().Set(this, &Application::OnOutputDone);
+      this->output.scale().Set(this, &Application::OnOutputScale);
       this->output.Setup(this->registry, name, version);
+//      this->output.SetUserData(this); // FIXME: uncomment this line wlll cause segfault
     }
   }
 
   void OnGlobalRemove(uint32_t name) {
-    fprintf(stdout, "name: %d\n", name);
+    fprintf(stdout, "Remove global object: %d\n", name);
+  }
+
+  void OnShmFormat(uint32_t format) {
+    fprintf(stderr, "%s: %d\n", __func__, format);
   }
 
   void OnShellSurfacePing(uint32_t serial) {
     shell_surface.Pong(serial);
+  }
+
+  void OnShellSurfaceConfigure(uint32_t edges, int32_t width, int32_t height) {
+
+  }
+
+  void OnShellSurfacePopupDone() {
+
+  }
+
+  void OnOutputGeometry(int32_t x,
+                        int32_t y,
+                        int32_t physical_width,
+                        int32_t physical_height,
+                        int32_t subpixel,
+                        const char *make,
+                        const char *model,
+                        int32_t transform) {
+
+  }
+
+  void OnOutputMode(uint32_t flags, int32_t width, int32_t height, int32_t refresh) {
+
+  }
+
+  void OnOutputDone() {
+
+  }
+
+  void OnOutputScale(int32_t factor) {
+
   }
 
   static void WatchEpollFd(int epoll_fd, int fd, uint32_t events, void *data) {
