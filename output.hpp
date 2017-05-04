@@ -31,9 +31,7 @@ struct Output {
     }
   }
 
-  const int placeholder1 = 0;
   struct wl_output *native;
-  const int placeholder2 = 0;
 
   Delegate<void(int32_t, int32_t, int32_t, int32_t, int32_t, const char *, const char *, int32_t)> geometry;
   Delegate<void(uint32_t, int32_t, int32_t, int32_t)> mode;

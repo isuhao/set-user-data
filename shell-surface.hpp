@@ -40,6 +40,12 @@ struct ShellSurface {
 
   struct wl_shell_surface *native;
 
+  Delegate<void(uint32_t)> ping;
+
+  Delegate<void(uint32_t, int32_t, int32_t)> configure;
+
+  Delegate<void()> popup_done;
+
   static void OnPing(void *data, struct wl_shell_surface *shell_surface, uint32_t serial);
 
   static void OnConfigure(void *data,

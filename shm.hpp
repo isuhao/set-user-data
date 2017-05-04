@@ -19,6 +19,7 @@ struct Shm {
   void Setup(const Registry &registry, uint32_t name, uint32_t version) {
     Destroy();
     native = static_cast<wl_shm *>(wl_registry_bind(registry.native, name, &wl_shm_interface, version));
+    wl_shm_add_listener(native, &kListener, this);
   }
 
   void Destroy() {
@@ -29,6 +30,12 @@ struct Shm {
   }
 
   struct wl_shm *native;
+
+  Delegate<void(uint32_t)> format;
+
+  static void OnFormat(void *data, struct wl_shm *shm, uint32_t format);
+
+  static const wl_shm_listener kListener;
 
 };
 

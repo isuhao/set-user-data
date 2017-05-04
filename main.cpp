@@ -131,8 +131,6 @@ struct Application {
   int epoll_fd;
   int display_fd;
 
-  static const wl_shm_listener kShmListener;
-
   Application()
       : epoll_fd(0),
         display_fd(0) {}
@@ -154,6 +152,7 @@ struct Application {
 
     surface.Setup(compositor);
 
+    shell_surface.ping = Delegate<void(uint32_t)>::FromMethod(this, &Application::OnShellSurfacePing);
     shell_surface.Setup(shell, surface);
     shell_surface.SetToplevel();
 
@@ -186,13 +185,13 @@ struct Application {
     epoll_fd = 0;
 
     buffer.Destroy();
-    surface.Destroy();
+    pool.Destroy();
     shell_surface.Destroy();
+    surface.Destroy();
     shell.Destroy();
+    shm.Destroy();
     output.Destroy();
     compositor.Destroy();
-    pool.Destroy();
-    shm.Destroy();
     registry.Destroy();
     display.Disconnect();
   }
@@ -298,25 +297,12 @@ struct Application {
     }
   }
 
-  static void WatchEpollFd(int epoll_fd, int fd, uint32_t events, void *data) {
-    struct epoll_event ep;
-    ep.events = events;
-    ep.data.ptr = data;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ep);
-  }
-
-  static void UnwatchEpollFd(int epoll_fd, int fd) {
-    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
-  }
-
   void OnGlobal(uint32_t name, const char *interface, uint32_t version) {
-    fprintf(stdout, "name: %d, interface: %s, version: %d\n", name, interface, version);
-
+//    fprintf(stdout, "name: %d, interface: %s, version: %d\n", name, interface, version);
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
       this->compositor.Setup(this->registry, name, version);
     } else if (strcmp(interface, wl_shm_interface.name) == 0) {
       this->shm.Setup(this->registry, name, version);
-      wl_shm_add_listener(this->shm.native, &kShmListener, this);
     } else if (strcmp(interface, wl_shell_interface.name) == 0) {
       this->shell.Setup(this->registry, name, version);
     } else if (strcmp(interface, wl_output_interface.name) == 0) {
@@ -328,14 +314,21 @@ struct Application {
     fprintf(stdout, "name: %d\n", name);
   }
 
-  static void OnShmFormat(void *data, struct wl_shm *shm, uint32_t format) {
-    fprintf(stdout, "format: %d\n", format);
+  void OnShellSurfacePing(uint32_t serial) {
+    shell_surface.Pong(serial);
   }
 
-};
+  static void WatchEpollFd(int epoll_fd, int fd, uint32_t events, void *data) {
+    struct epoll_event ep;
+    ep.events = events;
+    ep.data.ptr = data;
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ep);
+  }
 
-const wl_shm_listener Application::kShmListener = {
-    OnShmFormat
+  static void UnwatchEpollFd(int epoll_fd, int fd) {
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+  }
+
 };
 
 int main() {
