@@ -150,6 +150,8 @@ struct Application {
     display.DispatchPending();
     display.Roundtrip();
 
+    surface.enter().Set(this, &Application::OnSurfaceEnter);
+    surface.leave().Set(this, &Application::OnSurfaceLeave);
     surface.Setup(compositor);
 
     shell_surface.configure().Set(this, &Application::OnShellSurfaceConfigure);
@@ -160,6 +162,9 @@ struct Application {
 
     CreateWindow();
     PaintPixels();
+
+//    output.SetUserData(this);
+//    surface.SetUserData(this);
   }
 
   void Run() {
@@ -358,6 +363,14 @@ struct Application {
   }
 
   void OnOutputScale(int32_t factor) {
+
+  }
+
+  void OnSurfaceEnter(struct wl_output* output) {
+
+  }
+
+  void OnSurfaceLeave(struct wl_output* output) {
 
   }
 

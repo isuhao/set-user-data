@@ -24,6 +24,8 @@ void Output::OnGeometry(void *data,
                         const char *model,
                         int32_t transform) {
   Output *_this = static_cast<Output *>(data);
+  assert(_this->placeholder1 == 0);
+  assert(_this->placeholder2 == 0);
   if (_this->geometry_)
     _this->geometry_(x, y, physical_width, physical_height, subpixel, make, model, transform);
 }
@@ -35,18 +37,24 @@ void Output::OnMode(void *data,
                     int32_t height,
                     int32_t refresh) {
   Output *_this = static_cast<Output *>(data);
+  assert(_this->placeholder1 == 0);
+  assert(_this->placeholder2 == 0);
   if (_this->mode_)
     _this->mode_(flags, width, height, refresh);
 }
 
 void Output::OnDone(void *data, struct wl_output *wl_output) {
   Output *_this = static_cast<Output *>(data);
+  assert(_this->placeholder1 == 0);
+  assert(_this->placeholder2 == 0);
   if (_this->done_)
     _this->done_();
 }
 
 void Output::OnScale(void *data, struct wl_output *wl_output, int32_t factor) {
   Output *_this = static_cast<Output *>(data);
+  assert(_this->placeholder1 == 0);
+  assert(_this->placeholder2 == 0);
   if (_this->scale_)
     _this->scale_(factor);
 }

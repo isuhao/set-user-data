@@ -39,10 +39,27 @@ struct Surface {
     wl_surface_commit(native);
   }
 
-  struct wl_surface *native;
+  void SetUserData(void *user_data) {
+    wl_surface_set_user_data(native, user_data);
+  }
 
-  Delegate<void(struct wl_output *)> enter;
-  Delegate<void(struct wl_output *)> leave;
+  const int placeholder1 = 0;
+  struct wl_surface *native;
+  const int placeholder2 = 0;
+
+  DelegateRef<void(struct wl_output *)> enter() {
+    return enter_;
+  }
+
+  DelegateRef<void(struct wl_output *)> leave() {
+    return leave_;
+  }
+
+ private:
+
+  Delegate<void(struct wl_output *)> enter_;
+
+  Delegate<void(struct wl_output *)> leave_;
 
   static void OnEnter(void *data, struct wl_surface *surface, struct wl_output *output);
 

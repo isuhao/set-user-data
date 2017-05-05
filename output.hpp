@@ -35,7 +35,9 @@ struct Output {
     wl_output_set_user_data(native, user_data);
   }
 
+  const int placeholder1 = 0;
   struct wl_output *native;
+  const int placeholder2 = 0;
 
   DelegateRef<void(int32_t, int32_t, int32_t, int32_t, int32_t,
                    const char *, const char *, int32_t)> geometry() {
