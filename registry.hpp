@@ -1,6 +1,6 @@
-/**
- * Registry structure
- */
+//
+// registry.hpp
+//
 
 #ifndef DISPLAY_DISPATCH_REGISTRY_HPP
 #define DISPLAY_DISPATCH_REGISTRY_HPP

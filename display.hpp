@@ -1,6 +1,6 @@
-/**
- * @file Display structure
- */
+//
+// display.hpp
+//
 
 #ifndef DISPLAY_DISPATCH_DISPLAY_HPP
 #define DISPLAY_DISPATCH_DISPLAY_HPP

@@ -1,5 +1,5 @@
 //
-// Created by zhanggyb on 17-5-4.
+// output.cpp
 //
 
 #include "output.hpp"

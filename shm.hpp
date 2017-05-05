@@ -1,5 +1,5 @@
 //
-// Created by zhanggyb on 17-5-3.
+// shm.hpp
 //
 
 #ifndef DISPLAY_DISPATCH_SHM_HPP

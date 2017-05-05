@@ -1,5 +1,5 @@
 //
-// Created by zhanggyb on 17-5-3.
+// buffer.hpp
 //
 
 #ifndef DISPLAY_DISPATCH_BUFFER_HPP

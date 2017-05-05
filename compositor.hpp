@@ -1,6 +1,6 @@
-/**
- * @file Compositor structure
- */
+//
+// compositor.hpp
+//
 
 #ifndef DISPLAY_DISPATCH_COMPOSITOR_HPP
 #define DISPLAY_DISPATCH_COMPOSITOR_HPP

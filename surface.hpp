@@ -1,5 +1,5 @@
 //
-// Created by zhanggyb on 17-5-3.
+// surface.hpp
 //
 
 #ifndef DISPLAY_DISPATCH_SURFACE_HPP

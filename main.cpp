@@ -1,6 +1,7 @@
-/**
- *
- */
+//
+// main.cpp
+//
+
 #include "display.hpp"
 #include "registry.hpp"
 #include "compositor.hpp"
