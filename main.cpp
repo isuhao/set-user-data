@@ -131,6 +131,8 @@ struct Application {
   int epoll_fd;
   int display_fd;
 
+  static const struct wl_registry_listener kListener;
+
   Application()
       : epoll_fd(0),
         display_fd(0) {}
@@ -143,28 +145,23 @@ struct Application {
     epoll_fd = CreateEpollFd();
     WatchEpollFd(epoll_fd, display_fd, EPOLLIN | EPOLLERR | EPOLLHUP, this);
 
-    registry.global().Set(this, &Application::OnGlobal);
-    registry.global_remove().Set(this, &Application::OnGlobalRemove);
     registry.Setup(display);
+    wl_registry_add_listener(registry.native, &kListener, this);
 
     display.DispatchPending();
     display.Roundtrip();
 
-    surface.enter().Set(this, &Application::OnSurfaceEnter);
-    surface.leave().Set(this, &Application::OnSurfaceLeave);
     surface.Setup(compositor);
 
-    shell_surface.configure().Set(this, &Application::OnShellSurfaceConfigure);
-    shell_surface.ping().Set(this, &Application::OnShellSurfacePing);
-    shell_surface.popup_done().Set(this, &Application::OnShellSurfacePopupDone);
     shell_surface.Setup(shell, surface);
     shell_surface.SetToplevel();
 
     CreateWindow();
     PaintPixels();
 
-//    output.SetUserData(this);
-//    surface.SetUserData(this);
+    // FIXME: the following 2 lines will cause assert error and segment fault:
+    output.SetUserData(this);
+    surface.SetUserData(this);
   }
 
   void Run() {
@@ -304,74 +301,21 @@ struct Application {
     }
   }
 
-  void OnGlobal(uint32_t name, const char *interface, uint32_t version) {
-//    fprintf(stdout, "name: %d, interface: %s, version: %d\n", name, interface, version);
+  static void OnGlobal(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version) {
+    Application* _this = static_cast<Application*>(data);
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-      this->compositor.Setup(this->registry, name, version);
+      _this->compositor.Setup(_this->registry, name, version);
     } else if (strcmp(interface, wl_shm_interface.name) == 0) {
-      this->shm.format().Set(this, &Application::OnShmFormat);
-      this->shm.Setup(this->registry, name, version);
+      _this->shm.Setup(_this->registry, name, version);
     } else if (strcmp(interface, wl_shell_interface.name) == 0) {
-      this->shell.Setup(this->registry, name, version);
+      _this->shell.Setup(_this->registry, name, version);
     } else if (strcmp(interface, wl_output_interface.name) == 0) {
-      this->output.geometry().Set(this, &Application::OnOutputGeometry);
-      this->output.mode().Set(this, &Application::OnOutputMode);
-      this->output.done().Set(this, &Application::OnOutputDone);
-      this->output.scale().Set(this, &Application::OnOutputScale);
-      this->output.Setup(this->registry, name, version);
-//      this->output.SetUserData(this); // FIXME: uncomment this line wlll cause segfault
+      _this->output.Setup(_this->registry, name, version);
     }
   }
 
-  void OnGlobalRemove(uint32_t name) {
+  static void OnGlobalRemove(void *data, struct wl_registry *registry, uint32_t name) {
     fprintf(stdout, "Remove global object: %d\n", name);
-  }
-
-  void OnShmFormat(uint32_t format) {
-    fprintf(stderr, "%s: %d\n", __func__, format);
-  }
-
-  void OnShellSurfacePing(uint32_t serial) {
-    shell_surface.Pong(serial);
-  }
-
-  void OnShellSurfaceConfigure(uint32_t edges, int32_t width, int32_t height) {
-
-  }
-
-  void OnShellSurfacePopupDone() {
-
-  }
-
-  void OnOutputGeometry(int32_t x,
-                        int32_t y,
-                        int32_t physical_width,
-                        int32_t physical_height,
-                        int32_t subpixel,
-                        const char *make,
-                        const char *model,
-                        int32_t transform) {
-
-  }
-
-  void OnOutputMode(uint32_t flags, int32_t width, int32_t height, int32_t refresh) {
-
-  }
-
-  void OnOutputDone() {
-
-  }
-
-  void OnOutputScale(int32_t factor) {
-
-  }
-
-  void OnSurfaceEnter(struct wl_output* output) {
-
-  }
-
-  void OnSurfaceLeave(struct wl_output* output) {
-
   }
 
   static void WatchEpollFd(int epoll_fd, int fd, uint32_t events, void *data) {
@@ -385,6 +329,11 @@ struct Application {
     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
   }
 
+};
+
+const struct wl_registry_listener Application::kListener = {
+    OnGlobal,
+    OnGlobalRemove
 };
 
 int main() {

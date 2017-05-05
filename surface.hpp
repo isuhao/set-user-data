@@ -7,7 +7,6 @@
 
 #include "compositor.hpp"
 #include "buffer.hpp"
-#include "delegate.hpp"
 
 struct Surface {
 
@@ -44,22 +43,10 @@ struct Surface {
   }
 
   const int placeholder1 = 0;
+
   struct wl_surface *native;
+
   const int placeholder2 = 0;
-
-  DelegateRef<void(struct wl_output *)> enter() {
-    return enter_;
-  }
-
-  DelegateRef<void(struct wl_output *)> leave() {
-    return leave_;
-  }
-
- private:
-
-  Delegate<void(struct wl_output *)> enter_;
-
-  Delegate<void(struct wl_output *)> leave_;
 
   static void OnEnter(void *data, struct wl_surface *surface, struct wl_output *output);
 

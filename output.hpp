@@ -7,8 +7,6 @@
 
 #include "registry.hpp"
 
-#include "delegate.hpp"
-
 struct Output {
 
   Output()
@@ -36,32 +34,10 @@ struct Output {
   }
 
   const int placeholder1 = 0;
+
   struct wl_output *native;
+
   const int placeholder2 = 0;
-
-  DelegateRef<void(int32_t, int32_t, int32_t, int32_t, int32_t,
-                   const char *, const char *, int32_t)> geometry() {
-    return geometry_;
-  };
-
-  DelegateRef<void(uint32_t, int32_t, int32_t, int32_t)> mode() {
-    return mode_;
-  };
-
-  DelegateRef<void()> done() {
-    return done_;
-  }
-
-  DelegateRef<void(int32_t)> scale() {
-    return scale_;
-  }
-
- private:
-
-  Delegate<void(int32_t, int32_t, int32_t, int32_t, int32_t, const char *, const char *, int32_t)> geometry_;
-  Delegate<void(uint32_t, int32_t, int32_t, int32_t)> mode_;
-  Delegate<void()> done_;
-  Delegate<void(int32_t)> scale_;
 
   static void OnGeometry(void *data,
                          struct wl_output *wl_output,

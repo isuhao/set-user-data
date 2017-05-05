@@ -31,14 +31,6 @@ struct Shm {
 
   struct wl_shm *native;
 
-  DelegateRef<void(uint32_t)> format() {
-    return format_;
-  }
-
- private:
-
-  Delegate<void(uint32_t)> format_;
-
   static void OnFormat(void *data, struct wl_shm *shm, uint32_t format);
 
   static const wl_shm_listener kListener;

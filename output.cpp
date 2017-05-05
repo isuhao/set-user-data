@@ -4,7 +4,7 @@
 
 #include "output.hpp"
 
-#include <stdio.h>
+#include <assert.h>
 
 const struct wl_output_listener Output::kListener = {
     OnGeometry,
@@ -26,8 +26,6 @@ void Output::OnGeometry(void *data,
   Output *_this = static_cast<Output *>(data);
   assert(_this->placeholder1 == 0);
   assert(_this->placeholder2 == 0);
-  if (_this->geometry_)
-    _this->geometry_(x, y, physical_width, physical_height, subpixel, make, model, transform);
 }
 
 void Output::OnMode(void *data,
@@ -39,22 +37,16 @@ void Output::OnMode(void *data,
   Output *_this = static_cast<Output *>(data);
   assert(_this->placeholder1 == 0);
   assert(_this->placeholder2 == 0);
-  if (_this->mode_)
-    _this->mode_(flags, width, height, refresh);
 }
 
 void Output::OnDone(void *data, struct wl_output *wl_output) {
   Output *_this = static_cast<Output *>(data);
   assert(_this->placeholder1 == 0);
   assert(_this->placeholder2 == 0);
-  if (_this->done_)
-    _this->done_();
 }
 
 void Output::OnScale(void *data, struct wl_output *wl_output, int32_t factor) {
   Output *_this = static_cast<Output *>(data);
   assert(_this->placeholder1 == 0);
   assert(_this->placeholder2 == 0);
-  if (_this->scale_)
-    _this->scale_(factor);
 }

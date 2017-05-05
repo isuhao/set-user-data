@@ -40,26 +40,6 @@ struct ShellSurface {
 
   struct wl_shell_surface *native;
 
-  DelegateRef<void(uint32_t)> ping() {
-    return ping_;
-  }
-
-  DelegateRef<void(uint32_t, int32_t, int32_t)> configure() {
-    return configure_;
-  }
-
-  DelegateRef<void()> popup_done() {
-    return popup_done_;
-  }
-
- private:
-
-  Delegate<void(uint32_t)> ping_;
-
-  Delegate<void(uint32_t, int32_t, int32_t)> configure_;
-
-  Delegate<void()> popup_done_;
-
   static void OnPing(void *data, struct wl_shell_surface *shell_surface, uint32_t serial);
 
   static void OnConfigure(void *data,
