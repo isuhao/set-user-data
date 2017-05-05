@@ -1,6 +1,6 @@
 # Sample code for my 'set user data' issue
 
-Minimal sample code to demonstrate the issue to use wl_output_set_user_data() and wl_surface_set_user_data().
+Minimal sample code to demonstrate the issue to use `wl_output_set_user_data()` and `wl_surface_set_user_data()`.
 
 Test environment:
 * Fedora 25
